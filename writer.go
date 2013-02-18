@@ -16,6 +16,18 @@ func (sp *slicer) next(n int) (b []byte) {
 	return
 }
 
+// Writer provides sequential writing of an ar archive.
+// An ar archive is sequence of header file pairs
+// Call WriteHeader to begin writing a new file, then call Write to supply the file's data
+//
+// Example:
+// archive := ar.NewWriter(writer)
+// header := new(ar.Header)
+// header.Size = 15 // bytes
+// if err := archive.WriteHeader(header); err != nil {
+// 	return err
+// }
+// io.Copy(archive, data)
 type Writer struct {
 	w io.Writer
 	globalHeader bool
@@ -30,6 +42,7 @@ type Header struct {
 	Size int64
 }
 
+// Create a new ar writer that writes to w
 func NewWriter(w io.Writer) *Writer { return &Writer{w: w} }
 
 func (aw *Writer) numeric(b []byte, x int64) {
@@ -56,6 +69,9 @@ func (aw *Writer) string(b []byte, str string) {
 	copy(b, []byte(s))
 }
 
+// Writes to the current entry in the ar archive
+// Returns ErrWriteTooLong if more than header.Size
+// bytes are written after a call to WriteHeader
 func (aw *Writer) Write(b []byte) (n int, err error) {
 	n, err = aw.w.Write(b)
 	if len(b)%2 == 1 {
@@ -66,6 +82,8 @@ func (aw *Writer) Write(b []byte) (n int, err error) {
 	return
 }
 
+// Writes the header to the underlying writer and prepares
+// to receive the file payload
 func (aw *Writer) WriteHeader(hdr *Header) error {
 	header := make([]byte, HEADER_BYTE_SIZE)
 	s := slicer(header)
