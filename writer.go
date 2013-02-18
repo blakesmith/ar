@@ -13,14 +13,6 @@ var (
 	ErrWriteTooLong    = errors.New("ar: write too long")
 )
 
-type slicer []byte
-
-func (sp *slicer) next(n int) (b []byte) {
-	s := *sp
-	b, *sp = s[0:n], s[n:]
-	return
-}
-
 // Writer provides sequential writing of an ar archive.
 // An ar archive is sequence of header file pairs
 // Call WriteHeader to begin writing a new file, then call Write to supply the file's data
