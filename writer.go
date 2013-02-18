@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-const HEADER_BYTE_SIZE = 68 
+const HEADER_BYTE_SIZE = 60
 
 var (
 	ErrWriteTooLong    = errors.New("ar: write too long")
@@ -27,6 +27,7 @@ func (sp *slicer) next(n int) (b []byte) {
 //
 // Example:
 // archive := ar.NewWriter(writer)
+// archive.WriteGlobalHeader()
 // header := new(ar.Header)
 // header.Size = 15 // bytes
 // if err := archive.WriteHeader(header); err != nil {
@@ -36,7 +37,6 @@ func (sp *slicer) next(n int) (b []byte) {
 type Writer struct {
 	w io.Writer
 	nb int64 // number of unwritten bytes for the current file entry
-	globalHeader bool // has the global file header been written yet?
 }
 
 type Header struct {
@@ -97,17 +97,17 @@ func (aw *Writer) Write(b []byte) (n int, err error) {
 	return
 }
 
+func (aw *Writer) WriteGlobalHeader() error {
+	_, err := aw.w.Write([]byte("!<arch>\n"))
+	return err
+}
+
 // Writes the header to the underlying writer and prepares
 // to receive the file payload
 func (aw *Writer) WriteHeader(hdr *Header) error {
 	aw.nb = int64(hdr.Size)
 	header := make([]byte, HEADER_BYTE_SIZE)
 	s := slicer(header)
-
-	if !aw.globalHeader {
-		aw.string(s.next(8), "!<arch>\n")
-		aw.globalHeader = true
-	}
 
 	aw.string(s.next(16), hdr.Name)
 	aw.numeric(s.next(12), hdr.ModTime.Unix())

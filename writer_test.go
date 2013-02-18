@@ -11,11 +11,11 @@ import (
 func TestGlobalHeaderWrite(t *testing.T) {
 	var buf bytes.Buffer
 	writer := NewWriter(&buf)
-	if err := writer.WriteHeader(new(Header)); err != nil {
+	if err := writer.WriteGlobalHeader(); err != nil {
 		t.Errorf(err.Error())
 	}
 
-	globalHeader := buf.Bytes()[0:8]
+	globalHeader := buf.Bytes()
 	expectedHeader := []byte("!<arch>\n")
 	if !bytes.Equal(globalHeader, expectedHeader) {
 		t.Errorf("Global header should be %s but is %s", expectedHeader, globalHeader)
@@ -34,6 +34,7 @@ func TestSimpleFile(t *testing.T) {
 
 	var buf bytes.Buffer
 	writer := NewWriter(&buf)
+	writer.WriteGlobalHeader()
 	writer.WriteHeader(hdr)
 	_, err := writer.Write([]byte(body))
 	if err != nil {
