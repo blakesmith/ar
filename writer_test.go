@@ -35,7 +35,10 @@ func TestSimpleFile(t *testing.T) {
 	var buf bytes.Buffer
 	writer := NewWriter(&buf)
 	writer.WriteHeader(hdr)
-	writer.Write([]byte(body))
+	_, err := writer.Write([]byte(body))
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 
 	f, _ := os.Open("./fixtures/hello.a")
 	defer f.Close()
@@ -48,5 +51,20 @@ func TestSimpleFile(t *testing.T) {
 	actual := buf.Bytes()
 	if !bytes.Equal(b, actual) {
 		t.Errorf("Expected %s to equal %s", actual, b)
+	}
+}
+
+func TestWriteTooLong(t *testing.T) {
+	body := "Hello world!\n"
+
+	hdr := new(Header)
+	hdr.Size = 1
+
+	var buf bytes.Buffer
+	writer := NewWriter(&buf)
+	writer.WriteHeader(hdr)
+	_, err := writer.Write([]byte(body))
+	if err != ErrWriteTooLong {
+		t.Errorf("Error should have been: %s", ErrWriteTooLong)
 	}
 }

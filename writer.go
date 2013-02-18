@@ -1,12 +1,17 @@
 package ar
 
 import (
+	"errors"
 	"io"
 	"time"
 	"strconv"
 )
 
 const HEADER_BYTE_SIZE = 68 
+
+var (
+	ErrWriteTooLong    = errors.New("ar: write too long")
+)
 
 type slicer []byte
 
@@ -30,7 +35,8 @@ func (sp *slicer) next(n int) (b []byte) {
 // io.Copy(archive, data)
 type Writer struct {
 	w io.Writer
-	globalHeader bool
+	nb int64 // number of unwritten bytes for the current file entry
+	globalHeader bool // has the global file header been written yet?
 }
 
 type Header struct {
@@ -73,8 +79,17 @@ func (aw *Writer) string(b []byte, str string) {
 // Returns ErrWriteTooLong if more than header.Size
 // bytes are written after a call to WriteHeader
 func (aw *Writer) Write(b []byte) (n int, err error) {
-	n, err = aw.w.Write(b)
-	if len(b)%2 == 1 {
+	if int64(len(b)) > aw.nb {
+		b = b[0:aw.nb]
+		err = ErrWriteTooLong
+	}
+	n, werr := aw.w.Write(b)
+	aw.nb -= int64(n)
+	if werr != nil {
+		return n, werr
+	}
+
+	if len(b)%2 == 1 { // data size must be aligned to an even byte
 		n2, _ := aw.w.Write([]byte{'\n'})
 		return n+n2, err
 	}
@@ -85,6 +100,7 @@ func (aw *Writer) Write(b []byte) (n int, err error) {
 // Writes the header to the underlying writer and prepares
 // to receive the file payload
 func (aw *Writer) WriteHeader(hdr *Header) error {
+	aw.nb = int64(hdr.Size)
 	header := make([]byte, HEADER_BYTE_SIZE)
 	s := slicer(header)
 
