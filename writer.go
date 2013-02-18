@@ -83,7 +83,7 @@ func (aw *Writer) WriteHeader(hdr *Header) error {
 	aw.numeric(s.next(10), hdr.Size)
 	aw.string(s.next(2), "`\n")
 
-	aw.w.Write(header)
+	_, err := aw.w.Write(header)
 
-	return nil
+	return err
 }
