@@ -8,12 +8,30 @@ import (
 	"time"
 )
 
+// Provides read access to an ar archive.
+// Call next to skip files
+// 
+// Example:
+//	reader := NewReader(f)
+//	var buf bytes.Buffer
+//	for {
+//		_, err := reader.Next()
+//		if err == io.EOF {
+//			break
+//		}
+//		if err != nil {
+//			t.Errorf(err.Error())
+//		}
+//		io.Copy(&buf, reader)
+//	}
+
 type Reader struct {
 	r io.Reader
 	nb int64
 	pad int64
 }
 
+// Copies read data to r. Strips the global ar header.
 func NewReader(r io.Reader) *Reader {
 	io.CopyN(ioutil.Discard, r, 8) // Discard global header
 
@@ -89,6 +107,9 @@ func (rd *Reader) readHeader() (*Header, error) {
 	return header, nil
 }
 
+// Call Next() to skip to the next file in the archive file.
+// Returns a Header which contains the metadata about the 
+// file in the archive.
 func (rd *Reader) Next() (*Header, error) {
 	err := rd.skipUnread()
 	if err != nil {
@@ -98,6 +119,7 @@ func (rd *Reader) Next() (*Header, error) {
 	return rd.readHeader()
 }
 
+// Read data from the current entry in the archive.
 func (rd *Reader) Read(b []byte) (n int, err error) {
 	if rd.nb == 0 {
 		return 0, io.EOF
