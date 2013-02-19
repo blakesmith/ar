@@ -60,6 +60,8 @@ func (rd *Reader) readHeader() (*Header, error) {
 	s.next(8) // Skip the global header
 	header.Name = rd.string(s.next(16))
 	header.ModTime = time.Unix(rd.numeric(s.next(12)), 0)
+	header.Uid = int(rd.numeric(s.next(6)))
+	header.Gid = int(rd.numeric(s.next(6)))
 
 	return header, nil
 }

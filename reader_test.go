@@ -27,4 +27,12 @@ func TestReadHeader(t *testing.T) {
 	if header.ModTime != expectedModTime {
 		t.Errorf("ModTime should be %s but is %s", expectedModTime, header.ModTime)
 	}
+	expectedUid := 501
+	if header.Uid != expectedUid {
+		t.Errorf("Uid should be %s but is %s", expectedUid, header.Uid)
+	}
+	expectedGid := 20
+	if header.Gid != expectedGid {
+		t.Errorf("Gid should be %s but is %s", expectedGid, header.Gid)
+	}
 }
