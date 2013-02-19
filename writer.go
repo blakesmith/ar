@@ -3,11 +3,8 @@ package ar
 import (
 	"errors"
 	"io"
-	"time"
 	"strconv"
 )
-
-const HEADER_BYTE_SIZE = 60
 
 var (
 	ErrWriteTooLong    = errors.New("ar: write too long")
@@ -29,15 +26,6 @@ var (
 type Writer struct {
 	w io.Writer
 	nb int64 // number of unwritten bytes for the current file entry
-}
-
-type Header struct {
-	Name string
-	ModTime time.Time
-	Uid int
-	Gid int
-	Mode int64
-	Size int64
 }
 
 // Create a new ar writer that writes to w
@@ -90,7 +78,7 @@ func (aw *Writer) Write(b []byte) (n int, err error) {
 }
 
 func (aw *Writer) WriteGlobalHeader() error {
-	_, err := aw.w.Write([]byte("!<arch>\n"))
+	_, err := aw.w.Write([]byte(GLOBAL_HEADER))
 	return err
 }
 
