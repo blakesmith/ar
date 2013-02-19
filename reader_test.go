@@ -64,3 +64,29 @@ func TestReadBody(t *testing.T) {
 		t.Errorf("Data value should be %s but is %s", expected, actual)
 	}
 }
+
+func TestReadMulti(t *testing.T) {
+	f, err := os.Open("./fixtures/multi_archive.a")
+	defer f.Close()
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	reader := NewReader(f)
+	var buf bytes.Buffer
+	for {
+		_, err := reader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		io.Copy(&buf, reader)
+	}
+	expected := []byte("Hello world!\nI love lamp.\n")
+	actual := buf.Bytes()
+	if !bytes.Equal(expected, actual) {
+		t.Errorf("Concatted byte buffer should be %s but is %s", expected, actual)
+	}
+}

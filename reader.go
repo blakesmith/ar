@@ -11,6 +11,7 @@ import (
 type Reader struct {
 	r io.Reader
 	nb int64
+	pad int64
 }
 
 func NewReader(r io.Reader) *Reader {
@@ -51,8 +52,8 @@ func (rd *Reader) octal(b []byte) int64 {
 }
 
 func (rd *Reader) skipUnread() error {
-	skip := rd.nb
-	rd.nb = 0
+	skip := rd.nb + rd.pad
+	rd.nb, rd.pad = 0, 0
 	if seeker, ok := rd.r.(io.Seeker); ok {
 		_, err := seeker.Seek(skip, os.SEEK_CUR)
 		return err
@@ -79,6 +80,11 @@ func (rd *Reader) readHeader() (*Header, error) {
 	header.Size = rd.numeric(s.next(10))
 
 	rd.nb = int64(header.Size)
+	if header.Size%2 == 1 {
+		rd.pad = 1
+	} else {
+		rd.pad = 0
+	}
 
 	return header, nil
 }
