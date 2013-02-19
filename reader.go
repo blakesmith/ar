@@ -14,6 +14,8 @@ type Reader struct {
 }
 
 func NewReader(r io.Reader) *Reader {
+	io.CopyN(ioutil.Discard, r, 8) // Discard global header
+
 	return &Reader{r: r}
 }
 
@@ -68,13 +70,15 @@ func (rd *Reader) readHeader() (*Header, error) {
 
 	header := new(Header)
 	s := slicer(headerBuf)
-	s.next(8) // Skip the global header
+
 	header.Name = rd.string(s.next(16))
 	header.ModTime = time.Unix(rd.numeric(s.next(12)), 0)
 	header.Uid = int(rd.numeric(s.next(6)))
 	header.Gid = int(rd.numeric(s.next(6)))
 	header.Mode = rd.octal(s.next(8))
-	s.next(2) // 'Magic' `\n
+	header.Size = rd.numeric(s.next(10))
+
+	rd.nb = int64(header.Size)
 
 	return header, nil
 }
@@ -86,4 +90,17 @@ func (rd *Reader) Next() (*Header, error) {
 	}
 	
 	return rd.readHeader()
+}
+
+func (rd *Reader) Read(b []byte) (n int, err error) {
+	if rd.nb == 0 {
+		return 0, io.EOF
+	}
+	if int64(len(b)) > rd.nb {
+		b = b[0:rd.nb]
+	}
+	n, err = rd.r.Read(b)
+	rd.nb -= int64(n)
+
+	return
 }
