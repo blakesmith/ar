@@ -35,4 +35,8 @@ func TestReadHeader(t *testing.T) {
 	if header.Gid != expectedGid {
 		t.Errorf("Gid should be %s but is %s", expectedGid, header.Gid)
 	}
+	expectedMode := int64(0644)
+	if header.Mode != expectedMode {
+		t.Errorf("Mode should be %s but is %s", expectedMode, header.Mode)
+	}
 }

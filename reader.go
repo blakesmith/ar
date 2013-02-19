@@ -37,6 +37,17 @@ func (rd *Reader) numeric(b []byte) int64 {
 	return n
 }
 
+func (rd *Reader) octal(b []byte) int64 {
+	i := len(b)-1
+	for i > 0 && b[i] == 32 {
+		i--
+	}
+
+	n, _ := strconv.ParseInt(string(b[3:i+1]), 8, 64)
+
+	return n
+}
+
 func (rd *Reader) skipUnread() error {
 	skip := rd.nb
 	rd.nb = 0
@@ -62,6 +73,8 @@ func (rd *Reader) readHeader() (*Header, error) {
 	header.ModTime = time.Unix(rd.numeric(s.next(12)), 0)
 	header.Uid = int(rd.numeric(s.next(6)))
 	header.Gid = int(rd.numeric(s.next(6)))
+	header.Mode = rd.octal(s.next(8))
+	s.next(2) // 'Magic' `\n
 
 	return header, nil
 }
