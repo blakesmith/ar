@@ -1,9 +1,9 @@
 package ar
 
 import (
-	"log"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestReadHeader(t *testing.T) {
@@ -19,9 +19,12 @@ func TestReadHeader(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	expected := "hello.txt"
-	if header.Name != expected {
-		log.Println([]byte(header.Name))
-		t.Errorf("Header name should be %s but is %s", expected, header.Name)
+	expectedName := "hello.txt"
+	if header.Name != expectedName {
+		t.Errorf("Header name should be %s but is %s", expectedName, header.Name)
+	}
+	expectedModTime := time.Unix(1361157466, 0)
+	if header.ModTime != expectedModTime {
+		t.Errorf("ModTime should be %s but is %s", expectedModTime, header.ModTime)
 	}
 }

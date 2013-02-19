@@ -4,6 +4,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
+	"time"
 )
 
 type Reader struct {
@@ -16,12 +18,23 @@ func NewReader(r io.Reader) *Reader {
 }
 
 func (rd *Reader) string(b []byte) string {
-	n := len(b)-1
-	for n > 0 && b[n] == 32 {
-		n--
+	i := len(b)-1
+	for i > 0 && b[i] == 32 {
+		i--
 	}
 
-	return string(b[0:n+1])
+	return string(b[0:i+1])
+}
+
+func (rd *Reader) numeric(b []byte) int64 {
+	i := len(b)-1
+	for i > 0 && b[i] == 32 {
+		i--
+	}
+
+	n, _ := strconv.ParseInt(string(b[0:i+1]), 10, 64)
+
+	return n
 }
 
 func (rd *Reader) skipUnread() error {
@@ -46,6 +59,7 @@ func (rd *Reader) readHeader() (*Header, error) {
 	s := slicer(headerBuf)
 	s.next(8) // Skip the global header
 	header.Name = rd.string(s.next(16))
+	header.ModTime = time.Unix(rd.numeric(s.next(12)), 0)
 
 	return header, nil
 }
