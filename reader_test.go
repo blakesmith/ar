@@ -52,15 +52,15 @@ func TestReadHeader(t *testing.T) {
 	}
 	expectedUid := 501
 	if header.Uid != expectedUid {
-		t.Errorf("Uid should be %s but is %s", expectedUid, header.Uid)
+		t.Errorf("Uid should be %d but is %d", expectedUid, header.Uid)
 	}
 	expectedGid := 20
 	if header.Gid != expectedGid {
-		t.Errorf("Gid should be %s but is %s", expectedGid, header.Gid)
+		t.Errorf("Gid should be %d but is %d", expectedGid, header.Gid)
 	}
 	expectedMode := int64(0644)
 	if header.Mode != expectedMode {
-		t.Errorf("Mode should be %s but is %s", expectedMode, header.Mode)
+		t.Errorf("Mode should be %d but is %d", expectedMode, header.Mode)
 	}
 }
 
