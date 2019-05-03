@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2013 Blake Smith <blakesmith0@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,30 +29,30 @@ import (
 	"time"
 )
 
-// Provides read access to an ar archive.
-// Call next to skip files
-// 
+// Reader provides read access to an ar archive.
+// Call next to skip files.
+//
 // Example:
-//	reader := NewReader(f)
-//	var buf bytes.Buffer
-//	for {
-//		_, err := reader.Next()
-//		if err == io.EOF {
-//			break
-//		}
-//		if err != nil {
-//			t.Errorf(err.Error())
-//		}
-//		io.Copy(&buf, reader)
-//	}
-
+//
+//     reader := NewReader(f)
+//     var buf bytes.Buffer
+//     for {
+//         _, err := reader.Next()
+//         if err == io.EOF {
+//             break
+//         }
+//         if err != nil {
+//             t.Errorf(err.Error())
+//         }
+//         io.Copy(&buf, reader)
+//     }
 type Reader struct {
-	r io.Reader
-	nb int64
+	r   io.Reader
+	nb  int64
 	pad int64
 }
 
-// Copies read data to r. Strips the global ar header.
+// NewReader creates a new reader reading from r. It strips the global ar header.
 func NewReader(r io.Reader) *Reader {
 	io.CopyN(ioutil.Discard, r, 8) // Discard global header
 
@@ -60,16 +60,16 @@ func NewReader(r io.Reader) *Reader {
 }
 
 func (rd *Reader) string(b []byte) string {
-	i := len(b)-1
+	i := len(b) - 1
 	for i > 0 && b[i] == 32 {
 		i--
 	}
 
-	return string(b[0:i+1])
+	return string(b[0 : i+1])
 }
 
 func (rd *Reader) numeric(b []byte) int64 {
-	i := len(b)-1
+	i := len(b) - 1
 	for i > 0 && b[i] == 32 {
 		i--
 	}
@@ -80,7 +80,7 @@ func (rd *Reader) numeric(b []byte) int64 {
 }
 
 func (rd *Reader) octal(b []byte) int64 {
-	i := len(b)-1
+	i := len(b) - 1
 	for i > 0 && b[i] == 32 {
 		i--
 	}
@@ -128,19 +128,19 @@ func (rd *Reader) readHeader() (*Header, error) {
 	return header, nil
 }
 
-// Call Next() to skip to the next file in the archive file.
-// Returns a Header which contains the metadata about the 
-// file in the archive.
+// Next skips to the next file in the archive file.
+// Returns a Header which contains the metadata about the
+// file in the archive. io.EOF is returned at the end of the input.
 func (rd *Reader) Next() (*Header, error) {
 	err := rd.skipUnread()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return rd.readHeader()
 }
 
-// Read data from the current entry in the archive.
+// Read reads data from the current entry in the archive.
 func (rd *Reader) Read(b []byte) (n int, err error) {
 	if rd.nb == 0 {
 		return 0, io.EOF
