@@ -85,7 +85,7 @@ func (rd *Reader) octal(b []byte) int64 {
 		i--
 	}
 
-	n, _ := strconv.ParseInt(string(b[3:i+1]), 8, 64)
+	n, _ := strconv.ParseInt(string(b[0:i+1]), 8, 64)
 
 	return n
 }
