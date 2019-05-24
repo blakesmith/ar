@@ -85,7 +85,14 @@ func (rd *Reader) octal(b []byte) int64 {
 		i--
 	}
 
-	n, _ := strconv.ParseInt(string(b[3:i+1]), 8, 64)
+	// check if octal start with 100xxx or just 0 (seen in elf .a files)
+	var input []byte
+	if(i < 2) {
+		input = b[0:i]
+	} else {
+		input = b[3:i+1]
+	}
+	n, _ := strconv.ParseInt(string(input), 8, 64)
 
 	return n
 }
