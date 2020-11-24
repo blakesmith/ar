@@ -22,6 +22,7 @@ THE SOFTWARE.
 package ar
 
 import (
+	"bytes"
 	"io"
 	"io/ioutil"
 	"os"
