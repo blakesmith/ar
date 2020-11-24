@@ -84,8 +84,12 @@ func (rd *Reader) octal(b []byte) int64 {
 	for i > 0 && b[i] == 32 {
 		i--
 	}
-
-	n, _ := strconv.ParseInt(string(b[3:i+1]), 8, 64)
+	start := 3
+	// ar command tool mode no hava '100' prefix
+	if bytes.IndexByte(b, ' ') == 3 {
+		start = 0
+	}
+	n, _ := strconv.ParseInt(string(b[start:i+1]), 8, 64)
 
 	return n
 }
