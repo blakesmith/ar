@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2013 Blake Smith <blakesmith0@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,8 +23,10 @@ package ar
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -88,5 +90,41 @@ func TestWriteTooLong(t *testing.T) {
 	_, err := writer.Write([]byte(body))
 	if err != ErrWriteTooLong {
 		t.Errorf("Error should have been: %s", ErrWriteTooLong)
+	}
+}
+
+// Use odd byte check error
+func TestShortWrite(t *testing.T) {
+	body := strings.NewReader("Hello world!\n")
+
+	hdr := new(Header)
+	hdr.Size = body.Size()
+
+	var buf bytes.Buffer
+	writer := NewWriter(&buf)
+	writer.WriteHeader(hdr)
+	// Hide io.WriteTo interface and io.ReadFrom interface
+	_, err := io.Copy(io.MultiWriter(writer), io.MultiReader(body))
+	if err != io.ErrShortWrite {
+		t.Errorf("Error should have been: %s", io.ErrShortWrite)
+	}
+}
+
+func TestWriteCopy(t *testing.T) {
+	body := strings.NewReader("Hello world!\n")
+
+	hdr := new(Header)
+	hdr.Size = body.Size()
+
+	var buf bytes.Buffer
+	writer := NewWriter(&buf)
+	writer.WriteHeader(hdr)
+	// Only hide io.WriteTo interface
+	wn, err := io.Copy(writer, io.MultiReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if wn != hdr.Size+1 {
+		t.Errorf("Expected %d to equal %d", wn, hdr.Size+1)
 	}
 }

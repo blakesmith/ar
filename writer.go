@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2013 Blake Smith <blakesmith0@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	ErrWriteTooLong    = errors.New("ar: write too long")
+	ErrWriteTooLong = errors.New("ar: write too long")
 )
 
 // Writer provides sequential writing of an ar archive.
@@ -45,7 +45,7 @@ var (
 // }
 // io.Copy(archive, data)
 type Writer struct {
-	w io.Writer
+	w  io.Writer
 	nb int64 // number of unwritten bytes for the current file entry
 }
 
@@ -92,7 +92,7 @@ func (aw *Writer) Write(b []byte) (n int, err error) {
 
 	if len(b)%2 == 1 { // data size must be aligned to an even byte
 		n2, _ := aw.w.Write([]byte{'\n'})
-		return n+n2, err
+		return n + n2, err
 	}
 
 	return
@@ -121,4 +121,19 @@ func (aw *Writer) WriteHeader(hdr *Header) error {
 	_, err := aw.w.Write(header)
 
 	return err
+}
+
+var _ io.ReaderFrom = &Writer{}
+
+// ReadFrom prevent returns io.ErrShortWrite when using io.Copy. This is to make io.Copy() to work correctly.
+func (aw *Writer) ReadFrom(r io.Reader) (written int64, err error) {
+	written, err = io.Copy(aw.w, r)
+	if err != nil {
+		return written, err
+	}
+	if written%2 == 1 { // data size must be aligned to an even byte
+		n2, err := aw.w.Write([]byte{'\n'})
+		return written + int64(n2), err
+	}
+	return written, err
 }
