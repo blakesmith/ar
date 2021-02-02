@@ -52,6 +52,11 @@ type Reader struct {
 	pad int64
 }
 
+var (
+	ErrNotSeekable = errors.New("ar: SectionReader only available when wrapping a Seeker")
+	ErrNotReaderAt = errors.New("ar: SectionReader only available when wrapping a ReaderAt")
+)
+
 // Copies read data to r. Strips the global ar header.
 func NewReader(r io.Reader) *Reader {
 	io.CopyN(ioutil.Discard, r, 8) // Discard global header
@@ -152,4 +157,27 @@ func (rd *Reader) Read(b []byte) (n int, err error) {
 	rd.nb -= int64(n)
 
 	return
+}
+
+// Returns a SectionReader that can be used in the future to read this section
+// of the archive. Requires that we be wrapping a ReaderAt that is also a
+// ReadSeeker; will fail otherwise.
+func (rd *Reader) GetSectionReader() (*io.SectionReader, error) {
+	seeker, ok := rd.r.(io.Seeker)
+	if !ok {
+		return nil, ErrNotSeekable
+	}
+	readerAt, ok := rd.r.(io.ReaderAt)
+	if !ok {
+		return nil, ErrNotReaderAt
+	}
+	if rd.nb == 0 {
+		return nil, io.EOF
+	}
+	offset, err := seeker.Seek(0, os.SEEK_CUR)
+	if err != nil {
+		return nil, err
+	}
+	retval := io.NewSectionReader(readerAt, offset, rd.nb)
+	return retval, rd.skipUnread()
 }
