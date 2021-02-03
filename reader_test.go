@@ -86,6 +86,47 @@ func TestReadBody(t *testing.T) {
 	}
 }
 
+func TestSectionReader(t *testing.T) {
+	f, err := os.Open("./fixtures/multi_archive.a")
+	defer f.Close()
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	reader := NewReader(f)
+	allSectionReaders := make([]*io.SectionReader, 0)
+	for {
+		_, err := reader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		sectionReader, err := reader.GetSectionReader()
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if sectionReader == nil {
+			t.Errorf("A nil SectionReader was returned by GetSectionReader")
+		}
+		allSectionReaders = append(allSectionReaders, sectionReader)
+	}
+	// Now, _after_ the loop completed, make sure we can go back and read the SectionReaders
+	var buf bytes.Buffer
+	for _, sr := range allSectionReaders {
+		_, err := io.Copy(&buf, sr)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	expected := []byte("Hello world!\nI love lamp.\n")
+	actual := buf.Bytes()
+	if !bytes.Equal(expected, actual) {
+		t.Errorf("Concatted byte buffer should be %s but is %s", expected, actual)
+	}
+}
+
 func TestReadMulti(t *testing.T) {
 	f, err := os.Open("./fixtures/multi_archive.a")
 	defer f.Close()
