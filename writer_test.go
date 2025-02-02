@@ -33,7 +33,7 @@ func TestGlobalHeaderWrite(t *testing.T) {
 	var buf bytes.Buffer
 	writer := NewWriter(&buf)
 	if err := writer.WriteGlobalHeader(); err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	globalHeader := buf.Bytes()
@@ -59,7 +59,7 @@ func TestSimpleFile(t *testing.T) {
 	writer.WriteHeader(hdr)
 	_, err := writer.Write([]byte(body))
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	f, _ := os.Open("./fixtures/hello.a")
@@ -67,7 +67,7 @@ func TestSimpleFile(t *testing.T) {
 
 	b, err := ioutil.ReadAll(f)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	actual := buf.Bytes()

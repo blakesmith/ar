@@ -34,12 +34,12 @@ func TestReadHeader(t *testing.T) {
 	defer f.Close()
 
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	reader := NewReader(f)
 	header, err := reader.Next()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	expectedName := "hello.txt"
@@ -69,12 +69,12 @@ func TestReadBody(t *testing.T) {
 	defer f.Close()
 
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	reader := NewReader(f)
 	_, err = reader.Next()
 	if err != nil && err != io.EOF {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	var buf bytes.Buffer
 	io.Copy(&buf, reader)
@@ -91,7 +91,7 @@ func TestReadMulti(t *testing.T) {
 	defer f.Close()
 
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	reader := NewReader(f)
 	var buf bytes.Buffer
@@ -101,7 +101,7 @@ func TestReadMulti(t *testing.T) {
 			break
 		}
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 		io.Copy(&buf, reader)
 	}
