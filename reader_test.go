@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2013 Blake Smith <blakesmith0@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -37,6 +37,44 @@ func TestReadHeader(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 	reader := NewReader(f)
+	header, err := reader.Next()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	expectedName := "hello.txt"
+	if header.Name != expectedName {
+		t.Errorf("Header name should be %s but is %s", expectedName, header.Name)
+	}
+	expectedModTime := time.Unix(1361157466, 0)
+	if header.ModTime != expectedModTime {
+		t.Errorf("ModTime should be %s but is %s", expectedModTime, header.ModTime)
+	}
+	expectedUid := 501
+	if header.Uid != expectedUid {
+		t.Errorf("Uid should be %d but is %d", expectedUid, header.Uid)
+	}
+	expectedGid := 20
+	if header.Gid != expectedGid {
+		t.Errorf("Gid should be %d but is %d", expectedGid, header.Gid)
+	}
+	expectedMode := int64(0644)
+	if header.Mode != expectedMode {
+		t.Errorf("Mode should be %d but is %d", expectedMode, header.Mode)
+	}
+}
+
+func TestReadStrictHeader(t *testing.T) {
+	f, err := os.Open("./fixtures/hello.a")
+	defer f.Close()
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	reader, err := NewStrictReader(f)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	header, err := reader.Next()
 	if err != nil {
 		t.Errorf(err.Error())

@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2013 Blake Smith <blakesmith0@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,6 +22,8 @@ THE SOFTWARE.
 package ar
 
 import (
+	"bytes"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -29,9 +31,13 @@ import (
 	"time"
 )
 
+var (
+	ErrBadMagicHeader = errors.New("ar: bad magic header")
+)
+
 // Provides read access to an ar archive.
 // Call next to skip files
-// 
+//
 // Example:
 //	reader := NewReader(f)
 //	var buf bytes.Buffer
@@ -47,8 +53,8 @@ import (
 //	}
 
 type Reader struct {
-	r io.Reader
-	nb int64
+	r   io.Reader
+	nb  int64
 	pad int64
 }
 
@@ -59,17 +65,33 @@ func NewReader(r io.Reader) *Reader {
 	return &Reader{r: r}
 }
 
+// NewStrictReader returns a strict ar reader on r. It checks the global ar
+// (magic) header.
+func NewStrictReader(r io.Reader) (*Reader, error) {
+	var b bytes.Buffer
+	if _, err := io.CopyN(&b, r, GLOBAL_HEADER_LENGTH); err != nil {
+		if errors.Is(err, io.EOF) {
+			return nil, ErrBadMagicHeader
+		}
+		return nil, err
+	}
+	if string(b.Bytes()) != GLOBAL_HEADER {
+		return nil, ErrBadMagicHeader
+	}
+	return &Reader{r: r}, nil
+}
+
 func (rd *Reader) string(b []byte) string {
-	i := len(b)-1
+	i := len(b) - 1
 	for i > 0 && b[i] == 32 {
 		i--
 	}
 
-	return string(b[0:i+1])
+	return string(b[0 : i+1])
 }
 
 func (rd *Reader) numeric(b []byte) int64 {
-	i := len(b)-1
+	i := len(b) - 1
 	for i > 0 && b[i] == 32 {
 		i--
 	}
@@ -80,11 +102,13 @@ func (rd *Reader) numeric(b []byte) int64 {
 }
 
 func (rd *Reader) octal(b []byte) int64 {
-	i := len(b)-1
+	i := len(b) - 1
 	for i > 0 && b[i] == 32 {
 		i--
 	}
-
+	if i <= 2 {
+		return 0
+	}
 	n, _ := strconv.ParseInt(string(b[3:i+1]), 8, 64)
 
 	return n
@@ -129,14 +153,14 @@ func (rd *Reader) readHeader() (*Header, error) {
 }
 
 // Call Next() to skip to the next file in the archive file.
-// Returns a Header which contains the metadata about the 
+// Returns a Header which contains the metadata about the
 // file in the archive.
 func (rd *Reader) Next() (*Header, error) {
 	err := rd.skipUnread()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return rd.readHeader()
 }
 

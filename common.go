@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2013 Blake Smith <blakesmith0@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,17 +26,18 @@ import (
 )
 
 const (
-	HEADER_BYTE_SIZE = 60
-	GLOBAL_HEADER = "!<arch>\n"
+	HEADER_BYTE_SIZE     = 60
+	GLOBAL_HEADER        = "!<arch>\n"
+	GLOBAL_HEADER_LENGTH = 8
 )
 
 type Header struct {
-	Name string
+	Name    string
 	ModTime time.Time
-	Uid int
-	Gid int
-	Mode int64
-	Size int64
+	Uid     int
+	Gid     int
+	Mode    int64
+	Size    int64
 }
 
 type slicer []byte
